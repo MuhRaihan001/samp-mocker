@@ -56,11 +56,6 @@ PLUGIN_EXPORT void PLUGIN_CALL ProcessTick() {
     PollSocket();
 }
 
-// --- Implementasi modul ---
-// Di-include langsung (bukan link object terpisah) supaya build tetap
-// cukup arahkan satu file: index.cpp. Kalau mau, ini bisa diganti jadi
-// compile terpisah tiap .cpp lalu di-link, tinggal hapus include di bawah
-// dan tambahkan src/*.cpp ke daftar source file compiler/CMake-mu.
 #include "src/globals.cpp"
 #include "src/amx_native_utils.cpp"
 #include "src/mock_native.cpp"
