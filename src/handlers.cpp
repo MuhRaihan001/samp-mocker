@@ -152,15 +152,53 @@ json HandleSetVar(const json &cmd) {
     return response;
 }
 
+static bool ParseMockName(const json &cmd, std::string &outName, json &outError) {
+    outName = cmd.value("name", std::string());
+    if (outName.empty()) {
+        outError["error"] = "field 'name' kosong";
+        return false;
+    }
+    return true;
+}
+
+// No-op kalau slot udah active, biar originalAddress yang kesimpen gak ketiban.
+static bool SetupTrampoline(AMX *amx, int nativeIdx, int slotIdx, MockSlot &slot) {
+    if (slot.active) return true;
+
+    ucell originalAddr;
+    std::string unused;
+    if (!GetNativeInfo(amx, nativeIdx, &originalAddr, &unused)) {
+        return false;
+    }
+    slot.originalAddress = originalAddr;
+    SetNativeAddress(amx, nativeIdx, (ucell)g_trampolines[slotIdx]);
+    return true;
+}
+
+static void ApplyMockConfig(const json &cmd, MockSlot &slot) {
+    slot.callLog.clear();
+
+    slot.hasReturnOverride = cmd.contains("returnValue");
+    slot.returnOverride = (cell)cmd.value("returnValue", 0);
+
+    slot.writes = (cmd.contains("writes") && cmd["writes"].is_array())
+        ? cmd["writes"].get<std::vector<json>>()
+        : std::vector<json>{};
+
+    slot.paramTypes = (cmd.contains("paramTypes") && cmd["paramTypes"].is_array())
+        ? cmd["paramTypes"].get<std::vector<std::string>>()
+        : std::vector<std::string>{};
+}
+
 json HandleMockNative(const json &cmd) {
     json response;
     if (!g_amx) {
         response["error"] = "belum ada AMX yang ter-load";
         return response;
     }
-    std::string name = cmd.value("name", std::string());
-    if (name.empty()) {
-        response["error"] = "field 'name' kosong";
+
+    std::string name;
+    if (!ParseMockName(cmd, name, response)) {
         return response;
     }
 
@@ -177,35 +215,19 @@ json HandleMockNative(const json &cmd) {
     }
 
     MockSlot &slot = g_mockSlots[slotIdx];
-    if (!slot.active) {
-        ucell originalAddr;
-        std::string unused;
-        GetNativeInfo(g_amx, nativeIdx, &originalAddr, &unused);
-        slot.originalAddress = originalAddr;
-        SetNativeAddress(g_amx, nativeIdx, (ucell)g_trampolines[slotIdx]);
+    if (!SetupTrampoline(g_amx, nativeIdx, slotIdx, slot)) {
+        response["error"] = "gagal baca info native asli: " + name;
+        return response;
     }
+
     slot.active = true;
-    slot.callLog.clear();
-
-    if (cmd.contains("returnValue")) {
-        slot.hasReturnOverride = true;
-        slot.returnOverride = (cell)cmd.value("returnValue", 0);
-    } else {
-        slot.hasReturnOverride = false;
-    }
-
-    if (cmd.contains("writes") && cmd["writes"].is_array()) {
-        slot.writes = cmd["writes"].get<std::vector<json>>();
-    } else {
-        slot.writes.clear();
-    }
+    ApplyMockConfig(cmd, slot);
 
     response["ok"] = true;
     response["name"] = name;
     response["mocked"] = true;
     return response;
 }
-
 json HandleUnmockNative(const json &cmd) {
     json response;
     std::string name = cmd.value("name", std::string());

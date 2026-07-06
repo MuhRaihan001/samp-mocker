@@ -3,8 +3,6 @@
 #include <string>
 #include "../sdk/amx/amx.h"
 
-// --- Plugin-wide globals (definisi ada di globals.cpp) ---
-
 extern void *pAMXFunctions;
 extern void (*logprintf)(const char *format, ...);
 

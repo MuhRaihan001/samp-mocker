@@ -6,7 +6,6 @@ MockSlot g_mockSlots[MAX_MOCKED_NATIVES];
 std::unordered_map<std::string, int> g_nameToSlot;
 
 // Trampoline generik per-slot. Dipakai cuma di TU ini buat bangun g_trampolines,
-// makanya definisinya taruh di .cpp, bukan header.
 template <std::size_t N>
 static cell AMX_NATIVE_CALL MockTrampoline(AMX *amx, cell *params) {
     MockSlot &slot = g_mockSlots[N];
@@ -14,7 +13,25 @@ static cell AMX_NATIVE_CALL MockTrampoline(AMX *amx, cell *params) {
     int argc = (int)(params[0] / sizeof(cell));
     json args = json::array();
     for (int i = 1; i <= argc; i++) {
-        args.push_back((long long)params[i]);
+        std::string type = (i - 1 < (int)slot.paramTypes.size()) ? slot.paramTypes[i - 1] : "i";
+
+        if (type == "s") {
+            cell *physAddr = nullptr;
+            amx_GetAddr(amx, params[i], &physAddr);
+            if (physAddr) {
+                int len = 0;
+                amx_StrLen(physAddr, &len);
+                std::string val(len, '\0');
+                amx_GetString(&val[0], physAddr, 0, len + 1);
+                args.push_back(val);
+            } else {
+                args.push_back(nullptr);
+            }
+        } else if (type == "f") {
+            args.push_back(amx_ctof(params[i]));
+        } else {
+            args.push_back((long long)params[i]);
+        }
     }
     slot.callLog.push_back(args);
 

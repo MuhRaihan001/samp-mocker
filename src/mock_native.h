@@ -13,13 +13,14 @@ const int MAX_MOCKED_NATIVES = 64;
 
 struct MockSlot {
     bool        used = false;
-    bool        active = false;    // true = lagi di-mock (gak forward ke asli)
+    bool        active = false;
     std::string name;
     ucell       originalAddress = 0;
     bool        hasReturnOverride = false;
     cell        returnOverride = 0;
     std::vector<json> callLog;
-    std::vector<json> writes; // out-parameter injection, lihat MockTrampoline
+    std::vector<json> writes;
+    std::vector<std::string> paramTypes;
 };
 
 extern MockSlot g_mockSlots[MAX_MOCKED_NATIVES];

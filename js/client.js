@@ -145,6 +145,14 @@ class SampMockClient {
     return this._send({ action: 'ping' });
   }
 
+  setConfig(options = {}) {
+    return this._send({ action: 'setconfig', maxRecvBuffer: options.maxRecvBuffer });
+  }
+
+  getConfig() {
+    return this._send({ action: 'getconfig' });
+  }
+
   close() {
     if (this.socket) this.socket.end();
   }
