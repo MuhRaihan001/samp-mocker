@@ -37,6 +37,10 @@ bool InitListenSocket(int port) {
 #endif
 
     g_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (g_listenSocket < 0) {
+        logprintf("[PAWN-MOCKER] gagal create socket (socket() error)");
+        return false;
+    }
 
     int opt = 1;
     setsockopt(g_listenSocket, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt));
@@ -46,8 +50,20 @@ bool InitListenSocket(int port) {
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     addr.sin_port = htons(port);
 
-    bind(g_listenSocket, (sockaddr *)&addr, sizeof(addr));
-    listen(g_listenSocket, 1);
+    if (bind(g_listenSocket, (sockaddr *)&addr, sizeof(addr)) != 0) {
+        logprintf("[PAWN-MOCKER] bind ke 127.0.0.1:%d gagal, port kepake proses lain?", port);
+        closesocket(g_listenSocket);
+        g_listenSocket = -1;
+        return false;
+    }
+
+    if (listen(g_listenSocket, 1) != 0) {
+        logprintf("[PAWN-MOCKER] listen() gagal di port %d", port);
+        closesocket(g_listenSocket);
+        g_listenSocket = -1;
+        return false;
+    }
+
     SetNonBlocking(g_listenSocket);
 
     return true;

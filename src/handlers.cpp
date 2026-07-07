@@ -105,6 +105,10 @@ json HandleGetVar(const json &cmd) {
 
     cell *physAddr;
     amx_GetAddr(g_amx, amxAddr, &physAddr);
+    if (!physAddr) {
+        response["error"] = "amx_GetAddr gagal buat pubvar: " + name;
+        return response;
+    }
 
     std::string type = cmd.value("type", "i");
     response["ok"] = true;
@@ -137,6 +141,10 @@ json HandleSetVar(const json &cmd) {
 
     cell *physAddr;
     amx_GetAddr(g_amx, amxAddr, &physAddr);
+    if (!physAddr) {
+        response["error"] = "amx_GetAddr gagal buat pubvar: " + name;
+        return response;
+    }
 
     std::string type = cmd.value("type", "i");
     if (type == "f") {

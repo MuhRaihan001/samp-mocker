@@ -9,7 +9,7 @@
 
 using json = nlohmann::json;
 
-const int MAX_MOCKED_NATIVES = 64;
+const int MAX_MOCKED_NATIVES = 512;
 
 struct MockSlot {
     bool        used = false;
