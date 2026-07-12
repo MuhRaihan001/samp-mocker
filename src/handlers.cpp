@@ -67,6 +67,10 @@ json HandleInvoke(const json &cmd) {
         }
     }
 
+    if (logprintf) {
+        logprintf("[PAWN-MOCKER] invoking public function: %s(%s)", name.c_str(), params.dump().c_str());
+    }
+
     cell retval = 0;
     int err = amx_Exec(g_amx, &retval, index);
 

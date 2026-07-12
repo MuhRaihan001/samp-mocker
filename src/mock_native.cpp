@@ -1,5 +1,6 @@
 #include "mock_native.h"
 #include "amx_native_utils.h"
+#include "globals.h"
 #include <utility>
 
 MockSlot g_mockSlots[MAX_MOCKED_NATIVES];
@@ -34,6 +35,11 @@ static cell AMX_NATIVE_CALL MockTrampoline(AMX *amx, cell *params) {
         }
     }
     slot.callLog.push_back(args);
+
+    if (logprintf) {
+        logprintf("[PAWN-MOCKER] native called: %s(%s) [%s]",
+            slot.name.c_str(), args.dump().c_str(), slot.active ? "mocked" : "passthrough");
+    }
 
     if (slot.active) {
         for (const auto &w : slot.writes) {
