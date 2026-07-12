@@ -56,6 +56,7 @@ PLUGIN_EXPORT void PLUGIN_CALL ProcessTick() {
     PollSocket();
 }
 
+#include "src/globals.cpp"
 #include "src/amx_native_utils.cpp"
 #include "src/mock_native.cpp"
 #include "src/handlers.cpp"
