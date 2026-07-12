@@ -9,32 +9,32 @@ json HandleInvoke(const json &cmd) {
     json response;
 
     if (!g_amx) {
-        response["error"] = "belum ada AMX yang ter-load (gamemode belum jalan?)";
+        response["error"] = "no AMX loaded yet (is the gamemode running?)";
         return response;
     }
 
     std::string name = cmd.value("name", cmd.value("callback", std::string()));
     if (name.empty()) {
-        response["error"] = "field 'name' (atau 'callback') kosong";
+        response["error"] = "field 'name' (or 'callback') is empty";
         return response;
     }
 
     int index;
     if (amx_FindPublic(g_amx, name.c_str(), &index) != AMX_ERR_NONE) {
-        response["error"] = "public function tidak ditemukan: " + name +
-            " (pastikan function di-declare 'public', bukan cuma 'stock')";
+        response["error"] = "public function not found: " + name +
+            " (make sure the function is declared 'public', not just 'stock')";
         return response;
     }
 
     json params = cmd.value("params", json::array());
     if (!params.is_array()) {
-        response["error"] = "field 'params' harus array of {type,value}, dapat tipe: " +
+        response["error"] = "field 'params' must be an array of {type,value}, got type: " +
             std::string(params.type_name());
         return response;
     }
     for (const auto &p : params) {
         if (!p.is_object()) {
-            response["error"] = "tiap elemen 'params' harus object {type,value}, dapat tipe: " +
+            response["error"] = "each element of 'params' must be an object {type,value}, got type: " +
                 std::string(p.type_name());
             return response;
         }
@@ -52,7 +52,7 @@ json HandleInvoke(const json &cmd) {
             int allotErr = amx_Allot(g_amx, (int)val.size() + 1, &amxAddr, &physAddr);
             if (allotErr != AMX_ERR_NONE || !physAddr) {
                 for (cell addr : allocatedAddrs) amx_Release(g_amx, addr);
-                response["error"] = "amx_Allot gagal buat parameter string (out of AMX heap?)";
+                response["error"] = "amx_Allot failed for string parameter (out of AMX heap?)";
                 return response;
             }
             amx_SetString(physAddr, val.c_str(), 0, 0, val.size() + 1);
@@ -75,7 +75,7 @@ json HandleInvoke(const json &cmd) {
     }
 
     if (err != AMX_ERR_NONE) {
-        response["error"] = "amx_Exec gagal, kode error: " + std::to_string(err);
+        response["error"] = "amx_Exec failed, error code: " + std::to_string(err);
         return response;
     }
 
@@ -88,25 +88,25 @@ json HandleInvoke(const json &cmd) {
 json HandleGetVar(const json &cmd) {
     json response;
     if (!g_amx) {
-        response["error"] = "belum ada AMX yang ter-load";
+        response["error"] = "no AMX loaded yet";
         return response;
     }
     std::string name = cmd.value("name", std::string());
     if (name.empty()) {
-        response["error"] = "field 'name' kosong";
+        response["error"] = "field 'name' is empty";
         return response;
     }
 
     cell amxAddr;
     if (amx_FindPubVar(g_amx, name.c_str(), &amxAddr) != AMX_ERR_NONE) {
-        response["error"] = "pubvar tidak ditemukan: " + name;
+        response["error"] = "pubvar not found: " + name;
         return response;
     }
 
     cell *physAddr;
     amx_GetAddr(g_amx, amxAddr, &physAddr);
     if (!physAddr) {
-        response["error"] = "amx_GetAddr gagal buat pubvar: " + name;
+        response["error"] = "amx_GetAddr failed for pubvar: " + name;
         return response;
     }
 
@@ -124,25 +124,25 @@ json HandleGetVar(const json &cmd) {
 json HandleSetVar(const json &cmd) {
     json response;
     if (!g_amx) {
-        response["error"] = "belum ada AMX yang ter-load";
+        response["error"] = "no AMX loaded yet";
         return response;
     }
     std::string name = cmd.value("name", std::string());
     if (name.empty()) {
-        response["error"] = "field 'name' kosong";
+        response["error"] = "field 'name' is empty";
         return response;
     }
 
     cell amxAddr;
     if (amx_FindPubVar(g_amx, name.c_str(), &amxAddr) != AMX_ERR_NONE) {
-        response["error"] = "pubvar tidak ditemukan: " + name;
+        response["error"] = "pubvar not found: " + name;
         return response;
     }
 
     cell *physAddr;
     amx_GetAddr(g_amx, amxAddr, &physAddr);
     if (!physAddr) {
-        response["error"] = "amx_GetAddr gagal buat pubvar: " + name;
+        response["error"] = "amx_GetAddr failed for pubvar: " + name;
         return response;
     }
 
@@ -163,13 +163,13 @@ json HandleSetVar(const json &cmd) {
 static bool ParseMockName(const json &cmd, std::string &outName, json &outError) {
     outName = cmd.value("name", std::string());
     if (outName.empty()) {
-        outError["error"] = "field 'name' kosong";
+        outError["error"] = "field 'name' is empty";
         return false;
     }
     return true;
 }
 
-// No-op kalau slot udah active, biar originalAddress yang kesimpen gak ketiban.
+// No-op if the slot is already active, so the stored originalAddress is not overwritten.
 static bool SetupTrampoline(AMX *amx, int nativeIdx, int slotIdx, MockSlot &slot) {
     if (slot.active) return true;
 
@@ -201,7 +201,7 @@ static void ApplyMockConfig(const json &cmd, MockSlot &slot) {
 json HandleMockNative(const json &cmd) {
     json response;
     if (!g_amx) {
-        response["error"] = "belum ada AMX yang ter-load";
+        response["error"] = "no AMX loaded yet";
         return response;
     }
 
@@ -212,19 +212,19 @@ json HandleMockNative(const json &cmd) {
 
     int nativeIdx = FindNativeIndexByName(g_amx, name);
     if (nativeIdx < 0) {
-        response["error"] = "native tidak ditemukan: " + name;
+        response["error"] = "native not found: " + name;
         return response;
     }
 
     int slotIdx = AllocMockSlot(name);
     if (slotIdx < 0) {
-        response["error"] = "slot mock penuh (maks " + std::to_string(MAX_MOCKED_NATIVES) + ")";
+        response["error"] = "mock slots full (max " + std::to_string(MAX_MOCKED_NATIVES) + ")";
         return response;
     }
 
     MockSlot &slot = g_mockSlots[slotIdx];
     if (!SetupTrampoline(g_amx, nativeIdx, slotIdx, slot)) {
-        response["error"] = "gagal baca info native asli: " + name;
+        response["error"] = "failed to read original native info: " + name;
         return response;
     }
 
@@ -241,7 +241,7 @@ json HandleUnmockNative(const json &cmd) {
     std::string name = cmd.value("name", std::string());
     auto it = g_nameToSlot.find(name);
     if (it == g_nameToSlot.end()) {
-        response["error"] = "native ini gak lagi di-mock: " + name;
+        response["error"] = "this native is not currently mocked: " + name;
         return response;
     }
 
@@ -264,14 +264,14 @@ json HandleGetNativeCalls(const json &cmd) {
     std::string name = cmd.value("name", std::string());
     auto it = g_nameToSlot.find(name);
     if (it == g_nameToSlot.end()) {
-        response["error"] = "native ini gak lagi di-mock: " + name;
+        response["error"] = "this native is not currently mocked: " + name;
         return response;
     }
     MockSlot &slot = g_mockSlots[it->second];
     response["ok"] = true;
     response["name"] = name;
     response["callCount"] = (int)slot.callLog.size();
-    response["calls"] = slot.callLog; // tiap elemen: array raw cell (int) argumen
+    response["calls"] = slot.callLog; // each element: array of raw cell (int) arguments
     return response;
 }
 
@@ -288,11 +288,11 @@ json HandleSetConfig(const json &cmd) {
     if (cmd.contains("maxRecvBuffer")) {
         long long raw = cmd.value("maxRecvBuffer", (long long)0);
         if (raw <= 0) {
-            response["error"] = "field 'maxRecvBuffer' harus > 0";
+            response["error"] = "field 'maxRecvBuffer' must be > 0";
             return response;
         }
         g_maxRecvBuffer = (size_t)raw;
-        logprintf("[PAWN-MOCKER] maxRecvBuffer diubah runtime jadi %zu bytes", g_maxRecvBuffer);
+        logprintf("[PAWN-MOCKER] maxRecvBuffer changed to %zu bytes", g_maxRecvBuffer);
     }
 
     response["ok"] = true;
@@ -328,6 +328,6 @@ json Dispatch(const json &cmd) {
     }
 
     json response;
-    response["error"] = "action tidak dikenal: " + action;
+    response["error"] = "unknown action: " + action;
     return response;
 }

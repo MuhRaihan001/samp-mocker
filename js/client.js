@@ -25,7 +25,7 @@ class SampMockClient {
       this.socket.on('data', (chunk) => this._onData(chunk));
 
       this.socket.on('close', () => {
-        this._rejectAllPending(new Error('koneksi ke mock_bridge terputus'));
+        this._rejectAllPending(new Error('connection to mock_bridge lost'));
       });
     });
   }
@@ -77,7 +77,7 @@ class SampMockClient {
 
   _send(payload) {
     if (!this.socket) {
-      return Promise.reject(new Error('belum connect, panggil .connect() dulu'));
+      return Promise.reject(new Error('not connected yet, call .connect() first'));
     }
 
     const id = this.nextId++;
@@ -86,7 +86,7 @@ class SampMockClient {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(new Error(`timeout (${this.timeoutMs}ms) nunggu respon untuk action "${payload.action}"`));
+        reject(new Error(`timeout (${this.timeoutMs}ms) waiting for response to action "${payload.action}"`));
       }, this.timeoutMs);
 
       this.pending.set(id, { resolve, reject, timer });
@@ -120,10 +120,10 @@ class SampMockClient {
       name,
       returnValue: options.returnValue,
       writes: options.writes,
-      // Tipe tiap parameter native ini, index 0 = param pertama.
-      // Contoh mysql_tquery(handle, query, callback, format, ...vararg):
-      // ['i', 's', 's', 's'] -> param ke-3 (callback) & ke-4 (format) didecode
-      // sebagai string di getNativeCalls(), bukan raw AMX address.
+      // Type of each parameter for this native, index 0 = first param.
+      // Example mysql_tquery(handle, query, callback, format, ...vararg):
+      // ['i', 's', 's', 's'] -> param 3 (callback) & param 4 (format) will be
+      // decoded as strings in getNativeCalls(), instead of raw AMX addresses.
       paramTypes: options.paramTypes,
     });
   }

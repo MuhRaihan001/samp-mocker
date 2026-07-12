@@ -5,7 +5,7 @@
 MockSlot g_mockSlots[MAX_MOCKED_NATIVES];
 std::unordered_map<std::string, int> g_nameToSlot;
 
-// Trampoline generik per-slot. Dipakai cuma di TU ini buat bangun g_trampolines,
+// Generic per-slot trampoline. Only used within this TU to build g_trampolines,
 template <std::size_t N>
 static cell AMX_NATIVE_CALL MockTrampoline(AMX *amx, cell *params) {
     MockSlot &slot = g_mockSlots[N];

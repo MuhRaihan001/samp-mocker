@@ -23,7 +23,7 @@ PLUGIN_EXPORT bool PLUGIN_CALL Load(void **ppData) {
                 g_maxRecvBuffer = parsed;
             }
         } catch (...) {
-            logprintf("[PAWN-MOCKER] PAWN_MOCKER_MAX_RECV_BUFFER invalid, pakai default");
+            logprintf("[PAWN-MOCKER] PAWN_MOCKER_MAX_RECV_BUFFER invalid, using default value of %zu bytes", g_maxRecvBuffer);
         }
     }
 
@@ -41,7 +41,7 @@ PLUGIN_EXPORT void PLUGIN_CALL Unload() {
 PLUGIN_EXPORT void PLUGIN_CALL AmxLoad(AMX *amx) {
     if (!g_amx) {
         g_amx = amx;
-        logprintf("[PAWN-MOCKER] AMX terdaftar sebagai target callback");
+        logprintf("[PAWN-MOCKER] AMX registered as callback target");
     }
 }
 
@@ -56,12 +56,6 @@ PLUGIN_EXPORT void PLUGIN_CALL ProcessTick() {
     PollSocket();
 }
 
-// --- Implementasi modul ---
-// Di-include langsung (bukan link object terpisah) supaya build tetap
-// cukup arahkan satu file: index.cpp. Kalau mau, ini bisa diganti jadi
-// compile terpisah tiap .cpp lalu di-link, tinggal hapus include di bawah
-// dan tambahkan src/*.cpp ke daftar source file compiler/CMake-mu.
-#include "src/globals.cpp"
 #include "src/amx_native_utils.cpp"
 #include "src/mock_native.cpp"
 #include "src/handlers.cpp"

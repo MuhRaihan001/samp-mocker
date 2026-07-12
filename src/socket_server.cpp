@@ -38,7 +38,7 @@ bool InitListenSocket(int port) {
 
     g_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (g_listenSocket < 0) {
-        logprintf("[PAWN-MOCKER] gagal create socket (socket() error)");
+        logprintf("[PAWN-MOCKER] failed to create socket connection (socket() error)");
         return false;
     }
 
@@ -51,14 +51,14 @@ bool InitListenSocket(int port) {
     addr.sin_port = htons(port);
 
     if (bind(g_listenSocket, (sockaddr *)&addr, sizeof(addr)) != 0) {
-        logprintf("[PAWN-MOCKER] bind ke 127.0.0.1:%d gagal, port kepake proses lain?", port);
+        logprintf("[PAWN-MOCKER] bind to 127.0.0.1:%d failed, port already used", port);
         closesocket(g_listenSocket);
         g_listenSocket = -1;
         return false;
     }
 
     if (listen(g_listenSocket, 1) != 0) {
-        logprintf("[PAWN-MOCKER] listen() gagal di port %d", port);
+        logprintf("[PAWN-MOCKER] listen() failed at %d", port);
         closesocket(g_listenSocket);
         g_listenSocket = -1;
         return false;
@@ -96,7 +96,7 @@ void PollSocket() {
         g_recvBuffer.append(buf, n);
 
         if (g_recvBuffer.size() > g_maxRecvBuffer) {
-            logprintf("[PAWN-MOCKER] recv buffer kelewat gede (%zu bytes, limit %zu), reset paksa (kemungkinan garbage tanpa newline)",
+            logprintf("[PAWN-MOCKER] recv buffer exceeded limit (%zu bytes, limit %zu bytes), buffer cleared",
                 g_recvBuffer.size(), g_maxRecvBuffer);
             g_recvBuffer.clear();
             return;
@@ -136,7 +136,7 @@ void PollSocket() {
             while (totalSent < out.size()) {
                 int sent = send(g_clientSocket, out.c_str() + totalSent, (int)(out.size() - totalSent), 0);
                 if (sent <= 0) {
-                    logprintf("[PAWN-MOCKER] send() gagal/partial, sisa %zu bytes gak terkirim", out.size() - totalSent);
+                    logprintf("[PAWN-MOCKER] send() failed/partial, %zu bytes not sent", out.size() - totalSent);
                     break;
                 }
                 totalSent += (size_t)sent;

@@ -21,10 +21,10 @@ AMX_HEADER *GetHeader(AMX *amx);
 bool UsesNameTable(AMX_HEADER *hdr);
 int GetNativeCount(AMX *amx);
 
-// Baca address + name dari entry ke-i, apapun formatnya.
+// Reads the address + name from the i-th entry, regardless of format.
 bool GetNativeInfo(AMX *amx, int index, ucell *outAddress, std::string *outName);
 
-// Tulis address baru ke entry ke-i (buat mocking / restore).
+// Writes a new address to the i-th entry (for mocking / restoring).
 bool SetNativeAddress(AMX *amx, int index, ucell newAddress);
 
 int FindNativeIndexByName(AMX *amx, const std::string &name);
