@@ -78,15 +78,22 @@ void CloseSockets() {
 }
 
 void PollSocket() {
-    if (g_clientSocket == -1) {
-        sockaddr_in clientAddr{};
-        socklen_t len = sizeof(clientAddr);
-        int s = accept(g_listenSocket, (sockaddr *)&clientAddr, &len);
-        if (s >= 0) {
-            SetNonBlocking(s);
-            g_clientSocket = s;
+    sockaddr_in clientAddr{};
+    socklen_t len = sizeof(clientAddr);
+    int newSock = accept(g_listenSocket, (sockaddr *)&clientAddr, &len);
+    if (newSock >= 0) {
+        SetNonBlocking(newSock);
+        if (g_clientSocket != -1) {
+            closesocket(g_clientSocket);
+            logprintf("[PAWN-MOCKER] new Node client connected, replacing stale connection");
+        } else {
             logprintf("[PAWN-MOCKER] Node client connected");
         }
+        g_clientSocket = newSock;
+        g_recvBuffer.clear();
+    }
+
+    if (g_clientSocket == -1) {
         return;
     }
 
