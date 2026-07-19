@@ -139,6 +139,6 @@ npx jest
 - The plugin only tracks a single AMX instance at a time (the first
   gamemode loaded); restarting the gamemode clears mocks automatically via
   `AmxUnload`.
-- Up to 64 natives can be mocked simultaneously (`MAX_MOCKED_NATIVES`).
+- Up to 512 natives can be mocked simultaneously (`MAX_MOCKED_NATIVES`).
 - Some log messages from the plugin and error responses returned over the
   socket are in Indonesian.

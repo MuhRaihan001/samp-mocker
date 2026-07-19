@@ -119,6 +119,14 @@ json HandleGetVar(const json &cmd) {
     response["name"] = name;
     if (type == "f") {
         response["value"] = amx_ctof(*physAddr);
+    } else if (type == "s") {
+        char buffer[256];
+        int err = amx_GetString(buffer, physAddr, 0, sizeof(buffer));
+        if (err != AMX_ERR_NONE) {
+            response["error"] = "amx_GetString failed for pubvar: " + name;
+            return response;
+        }
+        response["value"] = std::string(buffer);
     } else {
         response["value"] = (long long)*physAddr;
     }
@@ -309,6 +317,7 @@ json HandleGetConfig(const json &cmd) {
     json response;
     response["ok"] = true;
     response["maxRecvBuffer"] = (long long)g_maxRecvBuffer;
+    response["serverPort"] = (long long)PAWN_MOCKER_PORT;
     return response;
 }
 
