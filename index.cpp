@@ -27,6 +27,20 @@ PLUGIN_EXPORT bool PLUGIN_CALL Load(void **ppData) {
         }
     }
 
+    if (const char *portEnv = std::getenv("PAWN_MOCKER_PORT")) {
+        try {
+            int parsed = std::stoi(portEnv);
+            if (parsed > 0 && parsed <= 65535) {
+                PAWN_MOCKER_PORT = parsed;
+            } else {
+                logprintf("[PAWN-MOCKER] PAWN_MOCKER_PORT out of range (1-65535), using default port %d", PAWN_MOCKER_PORT);
+            }
+        } catch (...) {
+            logprintf("[PAWN-MOCKER] PAWN_MOCKER_PORT invalid, using default port %d", PAWN_MOCKER_PORT);
+        }
+    }
+
+
     InitListenSocket(PAWN_MOCKER_PORT);
 
     logprintf("[PAWN-MOCKER] listening on 127.0.0.1:%d (maxRecvBuffer=%zu bytes)", PAWN_MOCKER_PORT, g_maxRecvBuffer);
