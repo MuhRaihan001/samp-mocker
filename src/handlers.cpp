@@ -120,13 +120,18 @@ json HandleGetVar(const json &cmd) {
     if (type == "f") {
         response["value"] = amx_ctof(*physAddr);
     } else if (type == "s") {
-        char buffer[256];
-        int err = amx_GetString(buffer, physAddr, 0, sizeof(buffer));
-        if (err != AMX_ERR_NONE) {
-            response["error"] = "amx_GetString failed for pubvar: " + name;
-            return response;
+        int len = 0;
+        amx_StrLen(physAddr, &len);
+
+        std::string val(len, '\0');
+        if (len > 0) {
+            int err = amx_GetString(&val[0], physAddr, 0, len + 1);
+            if (err != AMX_ERR_NONE) {
+                response["error"] = "amx_GetString failed for pubvar: " + name;
+                return response;
+            }
         }
-        response["value"] = std::string(buffer);
+        response["value"] = val;
     } else {
         response["value"] = (long long)*physAddr;
     }
